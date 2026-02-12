@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(uv run uvicorn:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "WebSearch",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(uv sync:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(git init:*)",
+      "Bash(git -C /Users/iuliantoader/projects/starting-ragchatbot-codebase-main status)",
+      "Bash(git -C /Users/iuliantoader/projects/starting-ragchatbot-codebase-main add .gitignore .env.example .python-version CLAUDE.md README.md backend-tool-refactor.md backend/ docs/ frontend/ main.py pyproject.toml run.sh uv.lock .claude/)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ]
+}
