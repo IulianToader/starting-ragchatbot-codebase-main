@@ -4,7 +4,6 @@ import pytest
 from search_tools import CourseSearchTool, ToolManager
 from tests.helpers import make_search_results
 
-
 # ── CourseSearchTool.execute() ───────────────────────────────────────
 
 
@@ -50,7 +49,9 @@ class TestCourseSearchToolExecute:
         assert "No relevant content found" in result
 
     # Empty results with filters
-    def test_execute_empty_results_with_filters_includes_filter_info(self, mock_vector_store):
+    def test_execute_empty_results_with_filters_includes_filter_info(
+        self, mock_vector_store
+    ):
         mock_vector_store.search.return_value = make_search_results()
         tool = self._make_tool(mock_vector_store)
 

@@ -54,8 +54,12 @@ class TestDirectResponse:
         assert kwargs["tools"] == SAMPLE_TOOLS
         assert kwargs["tool_choice"] == {"type": "auto"}
 
-    def test_conversation_history_in_system_prompt(self, generator, mock_anthropic_client):
-        generator.generate_response("hi", conversation_history="User: hello\nAssistant: hi")
+    def test_conversation_history_in_system_prompt(
+        self, generator, mock_anthropic_client
+    ):
+        generator.generate_response(
+            "hi", conversation_history="User: hello\nAssistant: hi"
+        )
 
         kwargs = mock_anthropic_client.messages.create.call_args.kwargs
         assert "Previous conversation:" in kwargs["system"]
@@ -79,7 +83,10 @@ class TestToolExecution:
         final_response = MockAnthropicResponse(
             content=[MockTextBlock(text="Final answer")], stop_reason="end_turn"
         )
-        mock_anthropic_client.messages.create.side_effect = [first_response, final_response]
+        mock_anthropic_client.messages.create.side_effect = [
+            first_response,
+            final_response,
+        ]
 
         result = generator.generate_response(
             "query", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager
@@ -99,12 +106,19 @@ class TestToolExecution:
             content=[tool_block], stop_reason="tool_use"
         )
         final_response = MockAnthropicResponse(stop_reason="end_turn")
-        mock_anthropic_client.messages.create.side_effect = [first_response, final_response]
+        mock_anthropic_client.messages.create.side_effect = [
+            first_response,
+            final_response,
+        ]
 
-        generator.generate_response("q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager)
+        generator.generate_response(
+            "q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager
+        )
 
         # Inspect the second API call's messages
-        second_call_kwargs = mock_anthropic_client.messages.create.call_args_list[1].kwargs
+        second_call_kwargs = mock_anthropic_client.messages.create.call_args_list[
+            1
+        ].kwargs
         messages = second_call_kwargs["messages"]
 
         # messages: [user, assistant(tool_use), user(tool_result)]
@@ -140,7 +154,9 @@ class TestErrorPropagation:
         ]
 
         with pytest.raises(RuntimeError, match="Second call failed"):
-            generator.generate_response("q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager)
+            generator.generate_response(
+                "q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager
+            )
 
     def test_tool_manager_exception_propagates(
         self, generator, mock_anthropic_client, mock_tool_manager
@@ -152,7 +168,9 @@ class TestErrorPropagation:
         mock_tool_manager.execute_tool.side_effect = RuntimeError("Tool exploded")
 
         with pytest.raises(RuntimeError, match="Tool exploded"):
-            generator.generate_response("q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager)
+            generator.generate_response(
+                "q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager
+            )
 
 
 # ── Multi-round tool execution ───────────────────────────────────────
@@ -193,8 +211,12 @@ class TestMultiRoundToolExecution:
         self, generator, mock_anthropic_client, mock_tool_manager
     ):
         mock_anthropic_client.messages.create.side_effect = [
-            MockAnthropicResponse(content=[MockToolUseBlock(id="t1")], stop_reason="tool_use"),
-            MockAnthropicResponse(content=[MockToolUseBlock(id="t2")], stop_reason="tool_use"),
+            MockAnthropicResponse(
+                content=[MockToolUseBlock(id="t1")], stop_reason="tool_use"
+            ),
+            MockAnthropicResponse(
+                content=[MockToolUseBlock(id="t2")], stop_reason="tool_use"
+            ),
             MockAnthropicResponse(
                 content=[MockTextBlock(text="Forced")], stop_reason="end_turn"
             ),
@@ -216,16 +238,24 @@ class TestMultiRoundToolExecution:
     def test_message_accumulation_across_rounds(
         self, generator, mock_anthropic_client, mock_tool_manager
     ):
-        block1 = MockToolUseBlock(name="get_course_outline", id="t1", input={"course_name": "X"})
-        block2 = MockToolUseBlock(name="search_course_content", id="t2", input={"query": "Y"})
+        block1 = MockToolUseBlock(
+            name="get_course_outline", id="t1", input={"course_name": "X"}
+        )
+        block2 = MockToolUseBlock(
+            name="search_course_content", id="t2", input={"query": "Y"}
+        )
         mock_anthropic_client.messages.create.side_effect = [
             MockAnthropicResponse(content=[block1], stop_reason="tool_use"),
             MockAnthropicResponse(content=[block2], stop_reason="tool_use"),
-            MockAnthropicResponse(content=[MockTextBlock(text="done")], stop_reason="end_turn"),
+            MockAnthropicResponse(
+                content=[MockTextBlock(text="done")], stop_reason="end_turn"
+            ),
         ]
         mock_tool_manager.execute_tool.side_effect = ["outline", "content"]
 
-        generator.generate_response("q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager)
+        generator.generate_response(
+            "q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager
+        )
 
         # The third call should have 5 messages
         third_call = mock_anthropic_client.messages.create.call_args_list[2].kwargs
@@ -244,23 +274,38 @@ class TestMultiRoundToolExecution:
         self, generator, mock_anthropic_client, mock_tool_manager
     ):
         mock_anthropic_client.messages.create.side_effect = [
-            MockAnthropicResponse(content=[MockToolUseBlock(id="t1")], stop_reason="tool_use"),
-            MockAnthropicResponse(content=[MockToolUseBlock(id="t2")], stop_reason="tool_use"),
+            MockAnthropicResponse(
+                content=[MockToolUseBlock(id="t1")], stop_reason="tool_use"
+            ),
+            MockAnthropicResponse(
+                content=[MockToolUseBlock(id="t2")], stop_reason="tool_use"
+            ),
         ]
-        mock_tool_manager.execute_tool.side_effect = ["data", RuntimeError("Round 2 fail")]
+        mock_tool_manager.execute_tool.side_effect = [
+            "data",
+            RuntimeError("Round 2 fail"),
+        ]
 
         with pytest.raises(RuntimeError, match="Round 2 fail"):
-            generator.generate_response("q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager)
+            generator.generate_response(
+                "q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager
+            )
 
     def test_api_error_on_third_call_propagates(
         self, generator, mock_anthropic_client, mock_tool_manager
     ):
         mock_anthropic_client.messages.create.side_effect = [
-            MockAnthropicResponse(content=[MockToolUseBlock(id="t1")], stop_reason="tool_use"),
-            MockAnthropicResponse(content=[MockToolUseBlock(id="t2")], stop_reason="tool_use"),
+            MockAnthropicResponse(
+                content=[MockToolUseBlock(id="t1")], stop_reason="tool_use"
+            ),
+            MockAnthropicResponse(
+                content=[MockToolUseBlock(id="t2")], stop_reason="tool_use"
+            ),
             RuntimeError("Third call boom"),
         ]
         mock_tool_manager.execute_tool.side_effect = ["r1", "r2"]
 
         with pytest.raises(RuntimeError, match="Third call boom"):
-            generator.generate_response("q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager)
+            generator.generate_response(
+                "q", tools=SAMPLE_TOOLS, tool_manager=mock_tool_manager
+            )

@@ -18,19 +18,27 @@ def rag():
     mock_config.ANTHROPIC_MODEL = "claude-test"
     mock_config.MAX_HISTORY = 2
 
-    with patch("rag_system.DocumentProcessor"), \
-         patch("rag_system.VectorStore") as MockVS, \
-         patch("rag_system.AIGenerator") as MockAI, \
-         patch("rag_system.SessionManager") as MockSM, \
-         patch("rag_system.CourseSearchTool") as MockCST, \
-         patch("rag_system.CourseOutlineTool") as MockCOT:
+    with (
+        patch("rag_system.DocumentProcessor"),
+        patch("rag_system.VectorStore") as MockVS,
+        patch("rag_system.AIGenerator") as MockAI,
+        patch("rag_system.SessionManager") as MockSM,
+        patch("rag_system.CourseSearchTool") as MockCST,
+        patch("rag_system.CourseOutlineTool") as MockCOT,
+    ):
 
         # Configure mocks
         MockAI.return_value.generate_response.return_value = "AI answer"
         MockSM.return_value.get_conversation_history.return_value = None
-        MockCST.return_value.get_tool_definition.return_value = {"name": "search_course_content"}
-        MockCOT.return_value.get_tool_definition.return_value = {"name": "get_course_outline"}
-        MockCST.return_value.last_sources = [{"label": "Course A - Lesson 1", "link": "https://example.com"}]
+        MockCST.return_value.get_tool_definition.return_value = {
+            "name": "search_course_content"
+        }
+        MockCOT.return_value.get_tool_definition.return_value = {
+            "name": "get_course_outline"
+        }
+        MockCST.return_value.last_sources = [
+            {"label": "Course A - Lesson 1", "link": "https://example.com"}
+        ]
         MockCOT.return_value.last_sources = []
 
         system = RAGSystem(mock_config)
@@ -52,7 +60,10 @@ class TestQueryHappyPath:
         rag.query("What is AI?")
 
         call_kwargs = rag.ai_generator.generate_response.call_args.kwargs
-        assert "Answer this question about course materials: What is AI?" in call_kwargs["query"]
+        assert (
+            "Answer this question about course materials: What is AI?"
+            in call_kwargs["query"]
+        )
 
     def test_query_passes_tools_and_manager(self, rag):
         rag.query("q")
@@ -68,7 +79,9 @@ class TestQueryHappyPath:
 class TestSessionHandling:
 
     def test_query_includes_session_history(self, rag):
-        rag.session_manager.get_conversation_history.return_value = "User: hi\nAssistant: hello"
+        rag.session_manager.get_conversation_history.return_value = (
+            "User: hi\nAssistant: hello"
+        )
 
         rag.query("follow-up", session_id="s1")
 
