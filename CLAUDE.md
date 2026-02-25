@@ -9,16 +9,26 @@ A full-stack RAG (Retrieval-Augmented Generation) chatbot for querying course ma
 ## Commands
 
 ```bash
-# Install dependencies
-uv sync
+# Install dependencies (including dev tools)
+uv sync --group dev
 
 # Run the application (backend + frontend on port 8000)
 ./run.sh
 # OR
 cd backend && uv run uvicorn app:app --reload --port 8000
-```
 
-No test or lint infrastructure is configured.
+# Run all quality checks (formatting + tests)
+./scripts/check.sh
+
+# Auto-fix formatting issues
+./scripts/check.sh --fix
+
+# Run black formatter directly
+uv run black .
+
+# Run tests
+uv run pytest
+```
 
 ## Architecture
 
